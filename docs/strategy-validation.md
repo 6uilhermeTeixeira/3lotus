@@ -5,8 +5,9 @@ Data da auditoria: 2026-09-14.
 ## Resultado
 
 O projeto ativo em `2Lotus` contém a implementação local da ZigZag V7. Ela é
-mantida neste runner como única estratégia. O bundle continua desabilitado e
-não pode emitir ordens até concluir o replay independente.
+mantida neste runner como única estratégia. O bundle está habilitado apenas
+para shadow e nunca pode emitir ordens até concluir o replay independente; o
+bridge também recusa ordem de forma explícita.
 
 ## Evidências encontradas no 2Lotus
 

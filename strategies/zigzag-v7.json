@@ -2,11 +2,13 @@
   "id": "zigzag-v7",
   "name": "ZigZag V7",
   "version": "7.0.0",
-  "enabled": false,
-  "implementation": "import-required",
+  "enabled": true,
+  "implementation": "builtin.zigzag-v7-shadow",
   "parameters": {
     "symbol": "XAUUSD",
-    "timeframe": "M5"
+    "timeframe": "M5",
+    "expansion_threshold": 6.0,
+    "calendar_range_floor": 4.5
   },
-  "sha256": "fba18e4ee9346349f840a8e2a793beb8f70233b622239ef92c60a97cd5720e9d"
+  "sha256": "36fc5c685cace3072f386b4924554ea1b86eab3e266a72685f190b4938dd898e"
 }

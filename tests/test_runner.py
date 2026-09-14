@@ -16,18 +16,19 @@ def settings() -> Settings:
 def test_strategy_bundles_pass_integrity_check() -> None:
     profiles = load_profiles(ROOT / "strategies")
     assert set(profiles) == {"zigzag-v7"}
+    assert profiles["zigzag-v7"].runnable
 
 
 def test_unimported_v7_fails_closed() -> None:
     profile = load_profiles(ROOT / "strategies")["zigzag-v7"]
     result = decide({"account": {"login": 4006488}}, profile, settings())
     assert result["action"] == "hold"
-    assert "disabled" in result["reason"]
+    assert result["reason"] == "v7_invalid_market_snapshot"
 
 
 def test_tampered_bundle_is_rejected(tmp_path: Path) -> None:
     source = json.loads((ROOT / "strategies" / "zigzag-v7.json").read_text())
-    source["enabled"] = True
+    source["enabled"] = False
     (tmp_path / "bad.json").write_text(json.dumps(source))
     try:
         load_profiles(tmp_path)

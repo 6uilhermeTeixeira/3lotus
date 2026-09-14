@@ -5,7 +5,9 @@ input string RunnerApiKey = "";
 input string StrategyId = "zigzag-v7";
 input string StrategySymbol = "XAUUSD";
 input string StrategyTimeframe = "M5";
-input int PollIntervalSeconds = 5;
+input int PollIntervalSeconds = 30;
+// V7 needs 205 completed H1 candles; 3,000 M5 candles allow the H1 gate to warm up.
+input int HistoryBars = 3000;
 input bool EnableOrderExecution = false;
 input long AllowedAccountLogin = 0;
 
@@ -39,12 +41,32 @@ void OnTimer()
 
 string BuildPayload(const MqlTick &tick)
 {
+   MqlRates rates[];
+   int copied = CopyRates(StrategySymbol, PERIOD_M5, 1, HistoryBars, rates);
+   if(copied <= 0)
+      PrintFormat("LotusRunnerBridge failed to copy M5 history. error=%d", GetLastError());
    long login = AccountInfoInteger(ACCOUNT_LOGIN);
    string mode = AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL ? "real" : "demo";
-   return "{\"bot_id\":\"" + StrategyId + "\",\"symbol\":\"" + _Symbol + "\",\"timeframe\":\"" + StrategyTimeframe +
+   return "{\"bot_id\":\"" + StrategyId + "\",\"timestamp_utc\":\"" + TimeToString(TimeGMT(), TIME_DATE|TIME_MINUTES|TIME_SECONDS) + "Z\",\"symbol\":\"" + _Symbol + "\",\"timeframe\":\"" + StrategyTimeframe +
       "\",\"bid\":" + DoubleToString(tick.bid, _Digits) + ",\"ask\":" + DoubleToString(tick.ask, _Digits) +
+      ",\"point_size\":" + DoubleToString(_Point, _Digits) + ",\"candles\":" + SerializeRates(rates, copied) +
       ",\"account\":{\"login\":" + IntegerToString(login) + ",\"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE),2) +
       ",\"equity\":" + DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY),2) + ",\"margin_free\":" + DoubleToString(AccountInfoDouble(ACCOUNT_MARGIN_FREE),2) +
       ",\"server\":\"" + AccountInfoString(ACCOUNT_SERVER) + "\",\"currency\":\"" + AccountInfoString(ACCOUNT_CURRENCY) +
       "\",\"trade_mode\":\"" + mode + "\"}}";
+}
+
+string SerializeRates(const MqlRates &rates[], const int count)
+{
+   string json = "[";
+   int digits = (int)SymbolInfoInteger(StrategySymbol, SYMBOL_DIGITS);
+   for(int index = 0; index < count; index++)
+   {
+      if(index > 0) json += ",";
+      json += "{\"timestamp_utc\":\"" + TimeToString(rates[index].time, TIME_DATE|TIME_MINUTES) + ":00Z\",";
+      json += "\"open\":" + DoubleToString(rates[index].open, digits) + ",\"high\":" + DoubleToString(rates[index].high, digits);
+      json += ",\"low\":" + DoubleToString(rates[index].low, digits) + ",\"close\":" + DoubleToString(rates[index].close, digits);
+      json += ",\"volume\":" + IntegerToString((long)rates[index].tick_volume) + "}";
+   }
+   return json + "]";
 }

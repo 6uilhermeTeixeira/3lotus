@@ -4,6 +4,7 @@ from typing import Any
 
 from .config import Settings
 from .strategies.registry import Profile
+from .strategies.zigzag_v7 import evaluate as evaluate_zigzag_v7
 
 
 def hold(reason: str, **metadata: Any) -> dict[str, Any]:
@@ -25,5 +26,6 @@ def decide(payload: dict[str, Any], profile: Profile | None, settings: Settings)
             "strategy implementation has not been imported and validated",
             strategy=profile.id, version=profile.version, implementation=profile.implementation,
         )
-    # Reserved for the audited V3-compatible implementation. No inferred V7/V8 logic is executed.
-    return hold("no validated entry signal", strategy=profile.id, version=profile.version)
+    if profile.implementation == "builtin.zigzag-v7-shadow":
+        return evaluate_zigzag_v7(payload, profile.parameters)
+    return hold("unsupported strategy implementation", strategy=profile.id)

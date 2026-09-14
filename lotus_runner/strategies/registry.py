@@ -19,7 +19,7 @@ class Profile:
 
     @property
     def runnable(self) -> bool:
-        return self.enabled and self.implementation == "builtin.zigzag-v3-compatible"
+        return self.enabled and self.implementation == "builtin.zigzag-v7-shadow"
 
 
 def _digest(payload: dict[str, Any]) -> str:
