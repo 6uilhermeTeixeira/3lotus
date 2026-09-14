@@ -21,7 +21,7 @@ def test_strategy_bundles_pass_integrity_check() -> None:
 
 def test_unimported_v7_fails_closed() -> None:
     profile = load_profiles(ROOT / "strategies")["zigzag-v7"]
-    result = decide({"account": {"login": 4006488}}, profile, settings())
+    result = decide({"account": {"login": 466305}}, profile, settings())
     assert result["action"] == "hold"
     assert result["reason"] == "v7_invalid_market_snapshot"
 
