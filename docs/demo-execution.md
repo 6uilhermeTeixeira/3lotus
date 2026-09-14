@@ -10,7 +10,7 @@ No `C:\LotusRunner\.env`, use uma chave local forte e o login demo correto:
 ```text
 LOTUS_RUNNER_API_KEY=troque-por-uma-chave-local
 LOTUS_RUNNER_EXECUTION_ENABLED=true
-LOTUS_RUNNER_ALLOWED_ACCOUNT_LOGIN=4006488
+LOTUS_RUNNER_ALLOWED_ACCOUNT_LOGIN=466305
 LOTUS_RUNNER_MAX_LIVE_LOT=0.01
 ```
 
@@ -30,7 +30,7 @@ StrategyTimeframe=M5
 HistoryBars=3000
 PollIntervalSeconds=30
 EnableOrderExecution=true
-AllowedAccountLogin=4006488
+AllowedAccountLogin=466305
 MaxOrderLot=0.01
 MaxOpenPositions=1
 MaxDailyLossCurrency=5.0
@@ -52,4 +52,3 @@ perda diária atingir 5 unidades da moeda da conta.
 
 Se qualquer etapa apresentar dúvida, mantenha `EnableOrderExecution=false` e
 pare o runner. Esta build não deve ser usada em conta real.
-

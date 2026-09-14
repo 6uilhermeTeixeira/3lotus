@@ -28,8 +28,8 @@ def test_unimported_v7_fails_closed() -> None:
 
 def test_execution_rejects_non_demo_account() -> None:
     profile = load_profiles(ROOT / "strategies")["zigzag-v7"]
-    configured = Settings("127.0.0.1", 1111, ROOT / "strategies", "zigzag-v7", "test-key", True, 4006488, 0.01)
-    result = decide({"account": {"login": 4006488, "trade_mode": "real"}}, profile, configured)
+    configured = Settings("127.0.0.1", 1111, ROOT / "strategies", "zigzag-v7", "test-key", True, 466305, 0.01)
+    result = decide({"account": {"login": 466305, "trade_mode": "real"}}, profile, configured)
     assert result["action"] == "hold"
     assert result["reason"] == "execution is restricted to demo accounts"
 
