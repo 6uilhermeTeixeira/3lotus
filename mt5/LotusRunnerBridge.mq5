@@ -47,7 +47,7 @@ string BuildPayload(const MqlTick &tick)
       PrintFormat("LotusRunnerBridge failed to copy M5 history. error=%d", GetLastError());
    long login = AccountInfoInteger(ACCOUNT_LOGIN);
    string mode = AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL ? "real" : "demo";
-   return "{\"bot_id\":\"" + StrategyId + "\",\"timestamp_utc\":\"" + TimeToString(TimeGMT(), TIME_DATE|TIME_MINUTES|TIME_SECONDS) + "Z\",\"symbol\":\"" + _Symbol + "\",\"timeframe\":\"" + StrategyTimeframe +
+   return "{\"bot_id\":\"" + StrategyId + "\",\"timestamp_utc\":\"" + ToIsoUtc(TimeGMT()) + "\",\"symbol\":\"" + _Symbol + "\",\"timeframe\":\"" + StrategyTimeframe +
       "\",\"bid\":" + DoubleToString(tick.bid, _Digits) + ",\"ask\":" + DoubleToString(tick.ask, _Digits) +
       ",\"point_size\":" + DoubleToString(_Point, _Digits) + ",\"candles\":" + SerializeRates(rates, copied) +
       ",\"account\":{\"login\":" + IntegerToString(login) + ",\"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE),2) +
@@ -63,10 +63,17 @@ string SerializeRates(const MqlRates &rates[], const int count)
    for(int index = 0; index < count; index++)
    {
       if(index > 0) json += ",";
-      json += "{\"timestamp_utc\":\"" + TimeToString(rates[index].time, TIME_DATE|TIME_MINUTES) + ":00Z\",";
+      json += "{\"timestamp_utc\":\"" + ToIsoUtc(rates[index].time) + "\",";
       json += "\"open\":" + DoubleToString(rates[index].open, digits) + ",\"high\":" + DoubleToString(rates[index].high, digits);
       json += ",\"low\":" + DoubleToString(rates[index].low, digits) + ",\"close\":" + DoubleToString(rates[index].close, digits);
       json += ",\"volume\":" + IntegerToString((long)rates[index].tick_volume) + "}";
    }
    return json + "]";
+}
+
+string ToIsoUtc(const datetime value)
+{
+   MqlDateTime stamp;
+   TimeToStruct(value, stamp);
+   return StringFormat("%04d-%02d-%02dT%02d:%02d:%02dZ", stamp.year, stamp.mon, stamp.day, stamp.hour, stamp.min, stamp.sec);
 }

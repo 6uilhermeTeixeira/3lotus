@@ -6,6 +6,18 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+def _load_dotenv(path: Path) -> None:
+    """Load local runtime configuration without adding a third-party dependency."""
+    if not path.exists():
+        return
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip())
+
+
 @dataclass(frozen=True)
 class Settings:
     host: str
@@ -20,6 +32,8 @@ class Settings:
     @classmethod
     def from_environment(cls) -> "Settings":
         root = Path(os.getenv("LOTUS_RUNNER_HOME", Path.cwd())).resolve()
+        _load_dotenv(root / ".env")
+        root = Path(os.getenv("LOTUS_RUNNER_HOME", root)).resolve()
         return cls(
             host=os.getenv("LOTUS_RUNNER_HOST", "127.0.0.1"),
             port=int(os.getenv("LOTUS_RUNNER_PORT", "1111")),

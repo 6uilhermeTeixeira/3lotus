@@ -1,7 +1,10 @@
 $ErrorActionPreference = "Stop"
 $installRoot = "C:\LotusRunner"
+$sourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 New-Item -ItemType Directory -Force -Path $installRoot | Out-Null
-Copy-Item -Path "$PSScriptRoot\..\dist\lotus-runner\*" -Destination $installRoot -Recurse -Force
+if ($sourceRoot -ne $installRoot) {
+    Copy-Item -Path (Join-Path $sourceRoot "*") -Destination $installRoot -Recurse -Force
+}
 
 @'
 LOTUS_RUNNER_HOME=C:\LotusRunner

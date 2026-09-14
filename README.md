@@ -26,6 +26,8 @@ The bridge transmits an account heartbeat plus 3,000 completed M5 candles, which
 
 V7's structural-expansion branch remains fail-closed until its 900-second tick-context collector is ported and independently replayed. The V1/V4/V7 directional path is available only in shadow.
 
+For the VPS procedure, see `docs/vps-shadow-install.md`.
+
 ## GitHub Actions artifact
 
 Every push to `main` produces `lotus-runner-windows-x64.zip`. It contains the runner, strategy bundles, bridge source, and installation helper. The `.mq5` file is source code and must be compiled in the installed MT5 MetaEditor, yielding the local `.ex5` file.
