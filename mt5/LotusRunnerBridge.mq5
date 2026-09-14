@@ -33,7 +33,8 @@ void OnTimer()
    char data[], result[];
    string headers = "Content-Type: application/json\r\n";
    if(RunnerApiKey != "") headers += "X-Lotus-Api-Key: " + RunnerApiKey + "\r\n";
-   StringToCharArray(payload, data, 0, WHOLE_ARRAY, CP_UTF8);
+   // Exclude MQL5's trailing NUL byte; it is not part of the JSON body.
+   StringToCharArray(payload, data, 0, StringLen(payload), CP_UTF8);
    string response_headers = "";
    int status = WebRequest("POST", RunnerUrl, headers, 3000, data, result, response_headers);
    if(status != 200) PrintFormat("Lotus runner request failed. status=%d error=%d", status, GetLastError());
