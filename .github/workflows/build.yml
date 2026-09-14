@@ -21,7 +21,9 @@ jobs:
       - name: Test
         run: python -m pytest -q
       - name: Build runner
-        run: pyinstaller --noconfirm --clean --name lotus-runner --onedir --paths . lotus_runner/main.py
+        run: pyinstaller --noconfirm --clean --name lotus-runner --onedir --paths . runner_entry.py
+      - name: Smoke-test executable
+        run: .\dist\lotus-runner\lotus-runner.exe --check
       - name: Assemble deployable package
         shell: pwsh
         run: |
