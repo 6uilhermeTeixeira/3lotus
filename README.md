@@ -28,6 +28,9 @@ V7's structural-expansion branch remains fail-closed until its 900-second tick-c
 
 For the VPS procedure, see `docs/vps-shadow-install.md`.
 
+For copy-and-paste PowerShell commands and error meanings, see
+`docs/vps-command-reference.md`.
+
 ## GitHub Actions artifact
 
 Every push to `main` produces `lotus-runner-windows-x64.zip`. It contains the runner, strategy bundles, bridge source, and installation helper. The `.mq5` file is source code and must be compiled in the installed MT5 MetaEditor, yielding the local `.ex5` file. Use the latest artifact; earlier artifacts before commit `runner_entry.py` do not start correctly.
