@@ -35,3 +35,5 @@ Every push to `main` produces `lotus-runner-windows-x64.zip`. It contains the ru
 3. Add an audited implementation to the runner.
 4. Add tests for inputs, risk controls, and fail-closed behavior.
 5. Leave execution disabled through demo validation.
+
+See `docs/strategy-validation.md` for the current source audit and non-negotiable promotion gate.
