@@ -1,0 +1,12 @@
+{
+  "id": "zigzag-v8",
+  "name": "ZigZag V8",
+  "version": "8.0.0",
+  "enabled": false,
+  "implementation": "import-required",
+  "parameters": {
+    "symbol": "XAUUSD",
+    "timeframe": "M5"
+  },
+  "sha256": "b2dc544c888378125f4e4d7d557fb039d456f0b558b81888f27b90b3b5ac345e"
+}

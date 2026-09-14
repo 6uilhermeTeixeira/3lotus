@@ -1,0 +1,39 @@
+name: Build Windows runner
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build tools
+        run: python -m pip install --upgrade pip pyinstaller pytest
+      - name: Test
+        run: python -m pytest -q
+      - name: Build runner
+        run: pyinstaller --noconfirm --clean --name lotus-runner --onedir --paths . lotus_runner/main.py
+      - name: Assemble deployable package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path package\lotus-runner\strategies, package\lotus-runner\mt5, package\lotus-runner\scripts
+          Copy-Item dist\lotus-runner\* package\lotus-runner -Recurse
+          Copy-Item strategies\* package\lotus-runner\strategies
+          Copy-Item mt5\LotusRunnerBridge.mq5 package\lotus-runner\mt5
+          Copy-Item scripts\install.ps1 package\lotus-runner\scripts
+          Copy-Item README.md package\lotus-runner
+          Compress-Archive -Path package\lotus-runner -DestinationPath package\lotus-runner-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lotus-runner-windows-x64
+          path: package/lotus-runner-windows-x64.zip
+          if-no-files-found: error
