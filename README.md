@@ -22,7 +22,11 @@ py -m lotus_runner.main --check
 
 Compile `mt5/LotusRunnerBridge.mq5` in MetaEditor and attach it to the configured XAUUSD M5 chart. In MT5, add `http://127.0.0.1:1111` under **Tools → Options → Expert Advisors → Allow WebRequest for listed URL**.
 
-The bridge transmits an account heartbeat plus 3,000 completed M5 candles, which are required for the V7 H1 context. It deliberately refuses order execution in this release.
+The bridge transmits an account heartbeat plus 3,000 completed M5 candles, which are required for the V7 H1 context. Shadow mode remains the default and execution requires the separate demo guard configuration.
+
+An explicitly guarded demo-execution build is documented in
+`docs/demo-execution.md`; it remains disabled unless both the runner and EA are
+configured with the allowlisted demo login and risk limits.
 
 V7's structural-expansion branch remains fail-closed until its 900-second tick-context collector is ported and independently replayed. The V1/V4/V7 directional path is available only in shadow.
 

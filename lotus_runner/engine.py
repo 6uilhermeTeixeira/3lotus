@@ -12,13 +12,15 @@ def hold(reason: str, **metadata: Any) -> dict[str, Any]:
 
 
 def decide(payload: dict[str, Any], profile: Profile | None, settings: Settings) -> dict[str, Any]:
-    """Fail closed. A bundle never generates orders until its implementation is validated."""
+    """Evaluate a strategy and promote only an approved demo candidate to an order."""
     if profile is None:
         return hold("configured strategy was not found")
     account = payload.get("account") or {}
     account_login = int(account.get("login") or 0)
     if settings.execution_enabled and account_login != settings.allowed_account_login:
         return hold("account login does not match the execution allowlist", strategy=profile.id)
+    if settings.execution_enabled and str(account.get("trade_mode", "")).lower() != "demo":
+        return hold("execution is restricted to demo accounts", strategy=profile.id)
     if not profile.enabled:
         return hold("strategy bundle is disabled", strategy=profile.id, version=profile.version)
     if not profile.runnable:
@@ -27,5 +29,15 @@ def decide(payload: dict[str, Any], profile: Profile | None, settings: Settings)
             strategy=profile.id, version=profile.version, implementation=profile.implementation,
         )
     if profile.implementation == "builtin.zigzag-v7-shadow":
-        return evaluate_zigzag_v7(payload, profile.parameters)
+        result = evaluate_zigzag_v7(payload, profile.parameters)
+        metadata = result.get("metadata") or {}
+        if settings.execution_enabled and bool(metadata.get("candidate")):
+            side = str(metadata.get("suggested_action", ""))
+            if side not in {"buy", "sell"}:
+                return hold("candidate did not contain a valid order side", strategy=profile.id)
+            result["action"] = side
+            result["size"] = min(float(metadata.get("suggested_size", settings.max_live_lot)), settings.max_live_lot)
+            result.setdefault("risk_checks", []).append({"name": "demo_execution_gate", "passed": True, "detail": "allowlisted_demo_account"})
+            result["metadata"] = {**metadata, "execution_mode": "demo", "execution_cap_lot": settings.max_live_lot}
+        return result
     return hold("unsupported strategy implementation", strategy=profile.id)

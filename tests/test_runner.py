@@ -26,6 +26,14 @@ def test_unimported_v7_fails_closed() -> None:
     assert result["reason"] == "v7_invalid_market_snapshot"
 
 
+def test_execution_rejects_non_demo_account() -> None:
+    profile = load_profiles(ROOT / "strategies")["zigzag-v7"]
+    configured = Settings("127.0.0.1", 1111, ROOT / "strategies", "zigzag-v7", "test-key", True, 4006488, 0.01)
+    result = decide({"account": {"login": 4006488, "trade_mode": "real"}}, profile, configured)
+    assert result["action"] == "hold"
+    assert result["reason"] == "execution is restricted to demo accounts"
+
+
 def test_tampered_bundle_is_rejected(tmp_path: Path) -> None:
     source = json.loads((ROOT / "strategies" / "zigzag-v7.json").read_text())
     source["enabled"] = False
