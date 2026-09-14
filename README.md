@@ -1,13 +1,13 @@
 # Lotus Runner
 
-Compact Windows runner for a MetaTrader 5 bridge and portable strategy bundles. It is designed for the 1 GB FXVPS server: no Docker, database server, dashboard, or historical backtest dataset.
+Compact Windows runner for the ZigZag V7 strategy and a MetaTrader 5 bridge. It is designed for the 1 GB FXVPS server: no Docker, database server, dashboard, or historical backtest dataset.
 
 ## Safety model
 
 - The HTTP service binds only to `127.0.0.1`.
 - Execution is disabled by default and the included MT5 bridge is shadow/telemetry-only.
 - A bundle is checked with SHA-256 before loading.
-- V7 and V8 are intentionally disabled: their validated source is not present in this workspace. They return `hold` until imported, reviewed, tested, and explicitly enabled.
+- ZigZag V7 is intentionally disabled: its unified independent replay is still pending. It returns `hold` until reviewed, tested, and explicitly enabled.
 - Credentials never belong in the repository, artifact, strategy bundle, or MT5 inputs committed to Git.
 
 ## Local check
