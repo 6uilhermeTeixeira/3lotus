@@ -28,13 +28,18 @@ StrategyId=zigzag-v7
 StrategySymbol=XAUUSD
 StrategyTimeframe=M5
 HistoryBars=3000
-PollIntervalSeconds=30
+SendIntervalMilliseconds=50
+HistoryRefreshSeconds=30
 EnableOrderExecution=true
 AllowedAccountLogin=466305
 MaxOrderLot=0.01
 MaxOpenPositions=1
 MaxDailyLossCurrency=5.0
 ```
+
+O EA coleta em `OnTick`, envia lotes ao runner no timer de 50 ms e atualiza o
+histórico M5 a cada 30 segundos. Se a corretora não fornecer book, o caminho
+estrutural permanece bloqueado e os demais caminhos continuam disponíveis.
 
 O EA recusa inicializar se a conta não for demo, se o login não coincidir, se
 o lote exceder 0,01, ou se os limites de risco forem alterados. Ele também

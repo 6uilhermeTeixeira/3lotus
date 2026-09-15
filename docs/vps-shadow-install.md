@@ -1,7 +1,7 @@
 # Instalação na FXVPS — ZigZag V7 em shadow
 
-Este procedimento instala somente o monitoramento em shadow. O bridge incluído
-recusa ordens, mesmo se `EnableOrderExecution` for marcado no MT5.
+Este procedimento instala somente o monitoramento em shadow. A execução exige
+a configuração demo separada e continua bloqueada para contas reais.
 
 ## 1. Baixar e extrair o artefato
 
@@ -70,7 +70,8 @@ StrategyId=zigzag-v7
 StrategySymbol=XAUUSD
 StrategyTimeframe=M5
 HistoryBars=3000
-PollIntervalSeconds=30
+SendIntervalMilliseconds=50
+HistoryRefreshSeconds=30
 EnableOrderExecution=false
 ```
 
@@ -99,9 +100,8 @@ histórico.
 
 - `v7_shadow_signal`: sinal de shadow registrado; nenhuma ordem é enviada.
 - `v7_directional_block`: o filtro H1/EMA50/Estocástico bloqueou o candidato.
-- `v7_v5_structural_branch_waiting_for_tick_context`: o regime de expansão
-  precisa do coletor de ticks de 900 segundos, ainda não portado para este
-  runner. Nenhuma operação é permitida nesse caso.
+- `v7_structural_filter_block`: o regime de expansão ainda não completou os
+  900 segundos de ticks, não recebeu book ou algum gate estrutural foi vetado.
 
 ## 7. Encerrar o teste
 

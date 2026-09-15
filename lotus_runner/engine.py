@@ -37,6 +37,11 @@ def decide(payload: dict[str, Any], profile: Profile | None, settings: Settings)
                 return hold("candidate did not contain a valid order side", strategy=profile.id)
             result["action"] = side
             result["size"] = min(float(metadata.get("suggested_size", settings.max_live_lot)), settings.max_live_lot)
+            for field in ("entry_price", "stop_loss_price", "take_profit_price"):
+                value = metadata.get(field)
+                if value is None or float(value) <= 0:
+                    return hold(f"candidate did not contain a valid {field}", strategy=profile.id)
+                result[field] = float(value)
             result.setdefault("risk_checks", []).append({"name": "demo_execution_gate", "passed": True, "detail": "allowlisted_demo_account"})
             result["metadata"] = {**metadata, "execution_mode": "demo", "execution_cap_lot": settings.max_live_lot}
         return result

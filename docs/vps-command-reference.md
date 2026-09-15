@@ -37,10 +37,17 @@ Invoke-RestMethod http://127.0.0.1:1111/health
 Invoke-RestMethod http://127.0.0.1:1111/ready
 Invoke-RestMethod http://127.0.0.1:1111/api/strategies
 Invoke-RestMethod http://127.0.0.1:1111/api/account
+Invoke-RestMethod http://127.0.0.1:1111/api/market/status
+Invoke-RestMethod http://127.0.0.1:1111/api/decisions/latest
+Invoke-RestMethod http://127.0.0.1:1111/api/metrics
 ```
 
 No endpoint `/api/account`, `connected : True` confirma que o EA já enviou o
 último snapshot da conta.
+
+`/api/market/status` confirma a idade do último tick e o total recebido.
+`/api/decisions/latest` mostra o último motivo de sinal ou bloqueio e sua
+latência. `/api/metrics` resume ticks, duplicatas, decisões e execuções.
 
 ## Verificar o processo e a porta
 
@@ -66,5 +73,5 @@ Na janela que está executando o processo, pressione:
 Ctrl+C
 ```
 
-O modo atual é somente shadow. Não habilite execução de ordens.
-
+O procedimento desta página é shadow. Para execução, use exclusivamente a
+configuração demo documentada em `docs/demo-execution.md`.

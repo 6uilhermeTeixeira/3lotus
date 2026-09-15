@@ -133,8 +133,6 @@ def evaluate(payload: dict[str, Any], parameters: dict[str, Any]) -> dict[str, A
     average_range = fmean(item.high - item.low for item in completed[-60:])
     expansion = float(parameters.get("expansion_threshold", 6.0))
     calendar_floor = float(parameters.get("calendar_range_floor", 4.5))
-    if average_range >= expansion:
-        return _hold("v7_v5_structural_branch_waiting_for_tick_context", v5_mode="v2_structural_expansion", average_m5_range_60=round(average_range, 6))
     bars30 = _m30(completed)
     if len(bars30) < 7:
         return _hold("v7_m30_history_warmup")
@@ -145,6 +143,59 @@ def evaluate(payload: dict[str, Any], parameters: dict[str, Any]) -> dict[str, A
     if not buy and not sell:
         return _hold("v7_zigzag_breakout_not_confirmed", v5_mode="v1")
     side = "buy" if buy else "sell"
+    if average_range >= expansion:
+        indicators = payload.get("indicators") or {}
+        settings = payload.get("runtime_limits") or {}
+        direction = 1 if side == "buy" else -1
+        entry = ask if side == "buy" else bid
+        breakout = float(pivot_high if side == "buy" else pivot_low)
+        tick_ready = float(indicators.get("impulse_900s_ready", 0)) == 1
+        book_ready = float(indicators.get("order_book_ready", 0)) == 1
+        require_book = bool(settings.get("require_order_book", True))
+        move_points = float(indicators.get("impulse_900s_move_points", 0))
+        move_pips = move_points * point / 0.01
+        aligned_move_pips = direction * move_pips
+        ema20 = _ema([item.close for item in completed[-20:]], 20)
+        ema_gap_pips = direction * (completed[-1].close - ema20) / 0.01
+        pivot_extension_pips = direction * (entry - breakout) / 0.01
+        spread_points = (ask - bid) / point
+        checks = [
+            {"name": "v7_structural_session", "passed": 3 <= now.hour < 19, "detail": "03:00-19:00_UTC"},
+            {"name": "v7_structural_weekday", "passed": now.weekday() != 4, "detail": "friday_excluded"},
+            {"name": "v7_structural_spread", "passed": spread_points <= float(settings.get("max_spread_points", 50)), "detail": f"spread_points={spread_points:.3f}"},
+            {"name": "v7_tick_context_window", "passed": tick_ready, "detail": "window=900s"},
+            {"name": "v7_order_book", "passed": book_ready or not require_book, "detail": "required" if require_book else "optional"},
+            {"name": "v7_tick_context_direction", "passed": tick_ready and aligned_move_pips >= float(settings.get("structural_context_pips", 1000)), "detail": f"aligned_pips={aligned_move_pips:.3f}"},
+            {"name": "v7_ema20_directional_gap", "passed": ema_gap_pips >= float(settings.get("structural_ema20_gap_pips", 900)), "detail": f"aligned_pips={ema_gap_pips:.3f}"},
+            {"name": "v7_pivot_extension", "passed": pivot_extension_pips <= float(settings.get("structural_max_pivot_extension_pips", 50)), "detail": f"pips={pivot_extension_pips:.3f}"},
+        ]
+        candidate = all(check["passed"] for check in checks)
+        stop_distance = 60 * 0.01
+        target_distance = 1000 * 0.01
+        return {
+            "action": "hold",
+            "reason": "v7_structural_shadow_signal" if candidate else "v7_structural_filter_block",
+            "size": 0.0,
+            "risk_checks": checks + [{"name": "experimental_shadow_lock", "passed": True, "detail": "demo_promotion_only"}],
+            "metadata": {
+                "candidate": candidate,
+                "suggested_action": side,
+                "suggested_size": 0.01,
+                "entry_price": entry,
+                "stop_loss_price": entry - direction * stop_distance,
+                "take_profit_price": entry + direction * target_distance,
+                "strategy_profile": "zigzag_scalper_v7_directional_shadow",
+                "v5_mode": "v2_structural_expansion",
+                "average_m5_range_60": round(average_range, 6),
+                "impulse_900s_move_pips": round(move_pips, 6),
+                "impulse_900s_aligned_move_pips": round(aligned_move_pips, 6),
+                "directional_ema20_gap_pips": round(ema_gap_pips, 6),
+                "pivot_extension_pips": round(pivot_extension_pips, 6),
+                "order_book_ready": book_ready,
+                "experimental_shadow_lock": True,
+                "research_status": "broker_tick_forward_validation_required",
+            },
+        }
     allowed = not (regime == "trend" and direction == "sell")
     checks = [{"name": "v7_h1_context", "passed": allowed, "detail": f"{regime}:{direction}"}]
     metadata: dict[str, Any] = {"candidate": allowed, "suggested_action": side, "v7_regime": regime, "v7_direction": direction, "v7_late_sell": side == "sell" and now.hour >= 12, "v5_average_m5_range_60": round(average_range, 6), "v5_mode": "v1_transition_calendar_gate" if calendar_floor <= average_range < expansion else "v1_normal_volatility"}
@@ -162,7 +213,11 @@ def evaluate(payload: dict[str, Any], parameters: dict[str, Any]) -> dict[str, A
         metadata.update({"candidate": bool(metadata["candidate"]) and calendar_ok, "v5_calendar_gate_active": True, "v5_calendar_rule": rule})
     else:
         metadata.update({"v5_calendar_gate_active": False, "v5_calendar_rule": "not_active"})
+    spread_points = (ask - bid) / point
+    spread_ok = spread_points <= float((payload.get("runtime_limits") or {}).get("max_spread_points", 50))
+    checks.append({"name": "v7_spread_limit", "passed": spread_ok, "detail": f"spread_points={spread_points:.3f}"})
+    metadata["candidate"] = bool(metadata["candidate"]) and spread_ok
     candidate = bool(metadata["candidate"])
     entry = ask if side == "buy" else bid
     metadata.update({"entry_price": entry, "stop_loss_price": entry - 240 * point if side == "buy" else entry + 240 * point, "take_profit_price": entry + 1000 * point if side == "buy" else entry - 1000 * point, "suggested_size": 0.10, "research_status": "provisional_requires_independent_replay"})
-    return {"action": "hold", "reason": "v7_shadow_signal" if candidate else "v7_directional_block", "size": 0.0, "risk_checks": checks + [{"name": "experimental_shadow_lock", "passed": True, "detail": "execution_permanently_disabled"}], "metadata": {"strategy_profile": "zigzag_scalper_v7_directional_shadow", "experimental_shadow_lock": True, **metadata}}
+    return {"action": "hold", "reason": "v7_shadow_signal" if candidate else "v7_directional_block", "size": 0.0, "risk_checks": checks + [{"name": "experimental_shadow_lock", "passed": True, "detail": "demo_promotion_only"}], "metadata": {"strategy_profile": "zigzag_scalper_v7_directional_shadow", "experimental_shadow_lock": True, **metadata}}

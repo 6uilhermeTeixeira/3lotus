@@ -1,13 +1,13 @@
 # Lotus Runner
 
-Compact Windows runner for the ZigZag V7 strategy and a MetaTrader 5 bridge. It is designed for the 1 GB FXVPS server: no Docker, database server, dashboard, or historical backtest dataset.
+Compact Windows runner for the ZigZag V7 strategy and a MetaTrader 5 bridge. It is designed for the 1 GB FXVPS server: no Docker or external database server. SQLite stores the rolling tick context and the local decision/execution audit.
 
 ## Safety model
 
 - The HTTP service binds only to `127.0.0.1`.
-- Execution is disabled by default and the included MT5 bridge is shadow/telemetry-only.
+- Execution is disabled by default. Demo execution requires matching runner/EA guards; real accounts are rejected by both layers.
 - A bundle is checked with SHA-256 before loading.
-- ZigZag V7 is intentionally disabled: its unified independent replay is still pending. It returns `hold` until reviewed, tested, and explicitly enabled.
+- ZigZag V7 remains provisional: its V1 path and canonical V2 structural gates can produce demo candidates, but real-account promotion remains prohibited until independent replay and forward validation are complete.
 - Credentials never belong in the repository, artifact, strategy bundle, or MT5 inputs committed to Git.
 
 ## Local check
@@ -22,13 +22,23 @@ py -m lotus_runner.main --check
 
 Compile `mt5/LotusRunnerBridge.mq5` in MetaEditor and attach it to the configured XAUUSD M5 chart. In MT5, add `http://127.0.0.1:1111` under **Tools → Options → Expert Advisors → Allow WebRequest for listed URL**.
 
-The bridge transmits an account heartbeat plus 3,000 completed M5 candles, which are required for the V7 H1 context. Shadow mode remains the default and execution requires the separate demo guard configuration.
+The bridge collects every `OnTick`, batches ticks every 50 ms, refreshes 3,000 completed M5 candles every 30 seconds, and forwards order-book snapshots when the broker provides them. The runner keeps a 900-second rolling tick window. Shadow mode remains the default and execution requires the separate demo guard configuration.
 
 An explicitly guarded demo-execution build is documented in
 `docs/demo-execution.md`; it remains disabled unless both the runner and EA are
 configured with the allowlisted demo login and risk limits.
 
-V7's structural-expansion branch remains fail-closed until its 900-second tick-context collector is ported and independently replayed. The V1/V4/V7 directional path is available only in shadow.
+V7's structural-expansion branch remains fail-closed until the 900-second tick window is ready and order book is available. The canonical thresholds are ported from 2Lotus, while real-account execution remains disabled.
+
+## Runtime telemetry
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:1111/api/market/status
+Invoke-RestMethod http://127.0.0.1:1111/api/decisions/latest
+Invoke-RestMethod http://127.0.0.1:1111/api/metrics
+```
+
+Runtime data is written under `C:\LotusRunner\data` and rotating logs under `C:\LotusRunner\logs` by default.
 
 For the VPS procedure, see `docs/vps-shadow-install.md`.
 

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from lotus_runner.config import Settings
 
 
@@ -8,3 +10,13 @@ def test_loads_local_dotenv(monkeypatch, tmp_path) -> None:
     settings = Settings.from_environment()
     assert settings.active_strategy == "zigzag-v7"
     assert settings.execution_enabled is False
+
+
+def test_rejects_noncanonical_tick_window() -> None:
+    settings = Settings("127.0.0.1", 1111, Path("strategies"), "zigzag-v7", "", False, 0, 0.01, tick_window_seconds=60)
+    try:
+        settings.validate()
+    except ValueError as error:
+        assert "must remain 900" in str(error)
+    else:
+        raise AssertionError("noncanonical tick window was accepted")
