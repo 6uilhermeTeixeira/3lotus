@@ -28,6 +28,9 @@ class Settings:
     execution_enabled: bool
     allowed_account_login: int
     max_live_lot: float
+    risk_per_trade_pct: float = 1.0
+    min_execution_lot: float = 0.01
+    execution_lot_step: float = 0.01
     market_db_path: Path | None = None
     tick_window_seconds: int = 900
     decision_debounce_ms: int = 50
@@ -51,11 +54,14 @@ class Settings:
             host=os.getenv("LOTUS_RUNNER_HOST", "127.0.0.1"),
             port=int(os.getenv("LOTUS_RUNNER_PORT", "1111")),
             strategies_dir=Path(os.getenv("LOTUS_RUNNER_STRATEGIES_DIR", root / "strategies")),
-            active_strategy=os.getenv("LOTUS_RUNNER_ACTIVE_STRATEGY", "zigzag-v7"),
+            active_strategy=os.getenv("LOTUS_RUNNER_ACTIVE_STRATEGY", "zigzag-scalper-v2"),
             api_key=os.getenv("LOTUS_RUNNER_API_KEY", ""),
             execution_enabled=os.getenv("LOTUS_RUNNER_EXECUTION_ENABLED", "false").lower() == "true",
             allowed_account_login=int(os.getenv("LOTUS_RUNNER_ALLOWED_ACCOUNT_LOGIN", "0")),
             max_live_lot=float(os.getenv("LOTUS_RUNNER_MAX_LIVE_LOT", "0.01")),
+            risk_per_trade_pct=float(os.getenv("LOTUS_RUNNER_RISK_PER_TRADE_PCT", "1.0")),
+            min_execution_lot=float(os.getenv("LOTUS_RUNNER_MIN_EXECUTION_LOT", "0.01")),
+            execution_lot_step=float(os.getenv("LOTUS_RUNNER_EXECUTION_LOT_STEP", "0.01")),
             market_db_path=database,
             tick_window_seconds=int(os.getenv("LOTUS_RUNNER_TICK_WINDOW_SECONDS", "900")),
             decision_debounce_ms=int(os.getenv("LOTUS_RUNNER_DECISION_DEBOUNCE_MS", "50")),
@@ -77,8 +83,12 @@ class Settings:
             raise ValueError("LOTUS_RUNNER_PORT must be between 1 and 65535")
         if not 0 < self.max_live_lot <= 0.01:
             raise ValueError("LOTUS_RUNNER_MAX_LIVE_LOT must be > 0 and <= 0.01")
+        if not 0 < self.risk_per_trade_pct <= 10:
+            raise ValueError("LOTUS_RUNNER_RISK_PER_TRADE_PCT must be between 0 and 10")
+        if self.min_execution_lot <= 0 or self.execution_lot_step <= 0:
+            raise ValueError("execution lot minimum and step must be positive")
         if self.tick_window_seconds != 900:
-            raise ValueError("LOTUS_RUNNER_TICK_WINDOW_SECONDS must remain 900 for ZigZag V7")
+            raise ValueError("LOTUS_RUNNER_TICK_WINDOW_SECONDS must remain 900 for ZigZag Scalper V2.0")
         if not 10 <= self.decision_debounce_ms <= 1000:
             raise ValueError("LOTUS_RUNNER_DECISION_DEBOUNCE_MS must be between 10 and 1000")
         if self.max_spread_points <= 0:

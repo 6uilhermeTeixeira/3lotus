@@ -6,3 +6,7 @@ dist/
 package/
 .env
 .runtime/
+data/
+logs/
+graphify-out/
+*.egg-info/

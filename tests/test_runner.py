@@ -16,8 +16,10 @@ def settings() -> Settings:
 
 def test_strategy_bundles_pass_integrity_check() -> None:
     profiles = load_profiles(ROOT / "strategies")
-    assert set(profiles) == {"zigzag-v7"}
+    assert set(profiles) == {"zigzag-v7", "zigzag-scalper-v2", "core-zigzag-v3"}
     assert profiles["zigzag-v7"].runnable
+    assert profiles["zigzag-scalper-v2"].runnable
+    assert profiles["core-zigzag-v3"].id == "zigzag-scalper-v2"
 
 
 def test_unimported_v7_fails_closed() -> None:

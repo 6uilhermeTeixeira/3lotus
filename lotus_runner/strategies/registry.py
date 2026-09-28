@@ -16,10 +16,11 @@ class Profile:
     implementation: str
     parameters: dict[str, Any]
     sha256: str
+    aliases: tuple[str, ...] = ()
 
     @property
     def runnable(self) -> bool:
-        return self.enabled and self.implementation == "builtin.zigzag-v7-shadow"
+        return self.enabled and self.implementation in {"builtin.zigzag-v7-shadow", "builtin.zigzag-v2-demo", "builtin.zigzag-v2-faithful"}
 
 
 def _digest(payload: dict[str, Any]) -> str:
@@ -41,8 +42,13 @@ def load_profiles(directory: Path) -> dict[str, Profile]:
             id=str(payload["id"]), name=str(payload["name"]), version=str(payload["version"]),
             enabled=bool(payload.get("enabled", False)), implementation=str(payload.get("implementation", "")),
             parameters=dict(payload.get("parameters", {})), sha256=actual,
+            aliases=tuple(str(alias) for alias in payload.get("aliases", [])),
         )
         if profile.id in profiles:
             raise ValueError(f"duplicate strategy id: {profile.id}")
         profiles[profile.id] = profile
+        for alias in profile.aliases:
+            if alias in profiles:
+                raise ValueError(f"duplicate strategy alias: {alias}")
+            profiles[alias] = profile
     return profiles

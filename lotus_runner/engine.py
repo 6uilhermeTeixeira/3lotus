@@ -5,6 +5,7 @@ from typing import Any
 from .config import Settings
 from .strategies.registry import Profile
 from .strategies.zigzag_v7 import evaluate as evaluate_zigzag_v7
+from .strategies.zigzag_v2 import evaluate as evaluate_zigzag_v2
 
 
 def hold(reason: str, **metadata: Any) -> dict[str, Any]:
@@ -28,8 +29,8 @@ def decide(payload: dict[str, Any], profile: Profile | None, settings: Settings)
             "strategy implementation has not been imported and validated",
             strategy=profile.id, version=profile.version, implementation=profile.implementation,
         )
-    if profile.implementation == "builtin.zigzag-v7-shadow":
-        result = evaluate_zigzag_v7(payload, profile.parameters)
+    if profile.implementation in {"builtin.zigzag-v7-shadow", "builtin.zigzag-v2-demo", "builtin.zigzag-v2-faithful"}:
+        result = evaluate_zigzag_v7(payload, profile.parameters) if profile.implementation == "builtin.zigzag-v7-shadow" else evaluate_zigzag_v2(payload, profile.parameters)
         metadata = result.get("metadata") or {}
         if settings.execution_enabled and bool(metadata.get("candidate")):
             side = str(metadata.get("suggested_action", ""))

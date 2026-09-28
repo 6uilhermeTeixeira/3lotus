@@ -2,21 +2,23 @@
 #include <Trade\Trade.mqh>
 
 input string RunnerUrl = "http://127.0.0.1:1111/decision";
-input string RunnerApiKey = "";
-input string StrategyId = "zigzag-v7";
+input string RunnerApiKey = "d64b30014932d4e750ac764a3636ee5f968cf0a2d32c409a688d23758f51a4e0";
+input int RequestTimeoutMilliseconds = 10000;
+input int TransientRetryDelayMilliseconds = 100;
+input string StrategyId = "zigzag-scalper-v2";
 input string StrategySymbol = "XAUUSD";
 input string StrategyTimeframe = "M5";
-input string CollectorId = "lotus-runner-bridge-01";
-input int SendIntervalMilliseconds = 50;
-input int HistoryRefreshSeconds = 30;
-// V7 needs 205 completed H1 candles; 3,000 M5 candles allow the H1 gate to warm up.
-input int HistoryBars = 3000;
-input bool EnableOrderExecution = false;
-input long AllowedAccountLogin = 0;
+input string CollectorId = "lotus-zigzag-v2-01";
+input int SendIntervalMilliseconds = 1000;
+input int HistoryRefreshSeconds = 120;
+// The V2.0 runner derives its M30 pivots from the most recent M5 candles.
+input int HistoryBars = 100;
+input bool EnableOrderExecution = true;
+input long AllowedAccountLogin = 466305;
 input double MaxOrderLot = 0.01;
 input int MaxOpenPositions = 1;
 input double MaxDailyLossCurrency = 5.0;
-input long MagicNumber = 1077001;
+input long MagicNumber = 1077002;
 input int MinOrderIntervalSeconds = 5;
 
 CTrade Trade;
@@ -123,15 +125,30 @@ void OnTimer()
    bool includeHistory = LastHistoryRefresh == 0 || TimeCurrent() - LastHistoryRefresh >= HistoryRefreshSeconds;
    string payload = BuildPayload(tick, includeHistory);
    char data[], result[];
-   string headers = "Content-Type: application/json\r\n";
+   string headers = "Content-Type: application/json\r\nConnection: close\r\n";
    if(RunnerApiKey != "") headers += "X-Lotus-Api-Key: " + RunnerApiKey + "\r\n";
-   // Exclude MQL5's trailing NUL byte; it is not part of the JSON body.
+   // Do not include MQL5's trailing NUL byte in the HTTP body.
    StringToCharArray(payload, data, 0, StringLen(payload), CP_UTF8);
    string response_headers = "";
-   int status = WebRequest("POST", RunnerUrl, headers, 3000, data, result, response_headers);
+   ResetLastError();
+   int status = WebRequest("POST", RunnerUrl, headers, RequestTimeoutMilliseconds, data, result, response_headers);
+   int webError = GetLastError();
+   // MT5 can occasionally return its internal WebRequest error (1003/5203)
+   // even while the loopback runner is available. Retry that transport-only
+   // failure once; HTTP responses such as 401 and 422 are never retried.
+   if(status == 1003 && webError == 5203)
+   {
+      Sleep(TransientRetryDelayMilliseconds);
+      ArrayResize(result, 0);
+      response_headers = "";
+      ResetLastError();
+      status = WebRequest("POST", RunnerUrl, headers, RequestTimeoutMilliseconds, data, result, response_headers);
+      webError = GetLastError();
+   }
    if(status != 200)
    {
-      PrintFormat("Lotus runner request failed. status=%d error=%d", status, GetLastError());
+      string response = ArraySize(result) > 0 ? CharArrayToString(result) : "";
+      PrintFormat("Lotus runner request failed. status=%d error=%d response=%s", status, webError, response);
       return;
    }
    ArrayResize(TickBuffer, 0);
@@ -153,7 +170,7 @@ void ExecuteDecision(const string response)
    if(volume <= 0 || sl <= 0 || tp <= 0) return;
    volume = NormalizeVolume(volume);
    if(volume <= 0) return;
-   bool sent = action == "buy" ? Trade.Buy(volume, StrategySymbol, 0.0, sl, tp, "Lotus V7 demo") : Trade.Sell(volume, StrategySymbol, 0.0, sl, tp, "Lotus V7 demo");
+   bool sent = action == "buy" ? Trade.Buy(volume, StrategySymbol, 0.0, sl, tp, "Lotus ZigZag V2 demo") : Trade.Sell(volume, StrategySymbol, 0.0, sl, tp, "Lotus ZigZag V2 demo");
    if(sent) LastOrderAt = TimeCurrent();
    PrintFormat("Lotus demo order %s sent=%s retcode=%u comment=%s", action, sent ? "true" : "false", Trade.ResultRetcode(), Trade.ResultRetcodeDescription());
    ReportExecution(requestId, action, sent, Trade.ResultRetcode());
@@ -167,11 +184,17 @@ void ReportExecution(const string requestId, const string action, const bool sen
    string payload = "{\"request_id\":\"" + requestId + "\",\"action\":\"" + action + "\",\"sent\":" + (sent ? "true" : "false") + ",\"retcode\":" + IntegerToString((int)retcode) + "}";
    char data[], result[];
    StringToCharArray(payload, data, 0, StringLen(payload), CP_UTF8);
-   string headers = "Content-Type: application/json\r\n";
+   string headers = "Content-Type: application/json\r\nConnection: close\r\n";
    if(RunnerApiKey != "") headers += "X-Lotus-Api-Key: " + RunnerApiKey + "\r\n";
    string responseHeaders = "";
-   int status = WebRequest("POST", url, headers, 3000, data, result, responseHeaders);
-   if(status != 200) PrintFormat("Lotus execution audit failed. status=%d error=%d", status, GetLastError());
+   ResetLastError();
+   int status = WebRequest("POST", url, headers, RequestTimeoutMilliseconds, data, result, responseHeaders);
+   if(status != 200)
+   {
+      int webError = GetLastError();
+      string response = ArraySize(result) > 0 ? CharArrayToString(result) : "";
+      PrintFormat("Lotus execution audit failed. status=%d error=%d response=%s", status, webError, response);
+   }
 }
 
 int CountOwnPositions()
@@ -247,16 +270,39 @@ string BuildPayload(const MqlTick &tick, const bool includeHistory)
       PrintFormat("LotusRunnerBridge failed to copy M5 history. error=%d", GetLastError());
    long login = AccountInfoInteger(ACCOUNT_LOGIN);
    string mode = AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL ? "real" : "demo";
+   double tickSize = SymbolInfoDouble(StrategySymbol, SYMBOL_TRADE_TICK_SIZE);
+   double tickValue = SymbolInfoDouble(StrategySymbol, SYMBOL_TRADE_TICK_VALUE);
+   double valuePerPoint = tickSize > 0 ? tickValue * _Point / tickSize : 0.0;
    int lastIndex = ArraySize(TickBuffer) - 1;
    string requestId = CollectorId + "-" + IntegerToString(TickBuffer[lastIndex].time_msc) + "-" + IntegerToString((long)TickBuffer[lastIndex].sequence);
    return "{\"bot_id\":\"" + StrategyId + "\",\"collector_id\":\"" + CollectorId + "\",\"request_id\":\"" + requestId + "\",\"timestamp_utc\":\"" + ToIsoUtc(TimeGMT()) + "\",\"symbol\":\"" + StrategySymbol + "\",\"timeframe\":\"" + StrategyTimeframe +
       "\",\"bid\":" + DoubleToString(tick.bid, _Digits) + ",\"ask\":" + DoubleToString(tick.ask, _Digits) +
       ",\"spread_points\":" + DoubleToString((tick.ask - tick.bid) / _Point, 3) +
-      ",\"point_size\":" + DoubleToString(_Point, _Digits) + ",\"ticks\":" + SerializeTicks() + ",\"order_book\":" + LatestBookJson + ",\"candles\":" + SerializeRates(rates, copied) +
+      ",\"point_size\":" + DoubleToString(_Point, _Digits) + ",\"value_per_point_per_lot\":" + DoubleToString(valuePerPoint, 8) + ",\"ticks\":" + SerializeTicks() + ",\"order_book\":" + LatestBookJson + ",\"candles\":" + SerializeRates(rates, copied) + ",\"positions\":" + SerializePositions() +
       ",\"account\":{\"login\":" + IntegerToString(login) + ",\"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE),2) +
       ",\"equity\":" + DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY),2) + ",\"margin_free\":" + DoubleToString(AccountInfoDouble(ACCOUNT_MARGIN_FREE),2) +
       ",\"server\":\"" + AccountInfoString(ACCOUNT_SERVER) + "\",\"currency\":\"" + AccountInfoString(ACCOUNT_CURRENCY) +
       "\",\"trade_mode\":\"" + mode + "\"}}";
+}
+
+string SerializePositions()
+{
+   string json = "[";
+   int written = 0;
+   int digits = (int)SymbolInfoInteger(StrategySymbol, SYMBOL_DIGITS);
+   for(int index = PositionsTotal() - 1; index >= 0; index--)
+   {
+      ulong ticket = PositionGetTicket(index);
+      if(ticket == 0 || !PositionSelectByTicket(ticket)) continue;
+      string symbol = PositionGetString(POSITION_SYMBOL);
+      string side = PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY ? "buy" : "sell";
+      if(written++ > 0) json += ",";
+      json += "{\"symbol\":\"" + symbol + "\",\"side\":\"" + side +
+         "\",\"volume\":" + DoubleToString(PositionGetDouble(POSITION_VOLUME), 2) +
+         ",\"entry_price\":" + DoubleToString(PositionGetDouble(POSITION_PRICE_OPEN), digits) +
+         ",\"profit\":" + DoubleToString(PositionGetDouble(POSITION_PROFIT), 2) + "}";
+   }
+   return json + "]";
 }
 
 string SerializeTicks()

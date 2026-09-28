@@ -151,7 +151,16 @@ def build_handler(state: RunnerState):
                 else:
                     self.send_json(HTTPStatus.OK, state.process(payload))
             except (ValueError, TypeError, json.JSONDecodeError) as error:
-                self.send_json(HTTPStatus.UNPROCESSABLE_ENTITY, {"detail": str(error)})
+                if str(error) == "candle history is required before tick-only updates":
+                    self.send_json(HTTPStatus.OK, {
+                        "action": "hold",
+                        "reason": "candle_history_warmup_required",
+                        "size": 0.0,
+                        "risk_checks": [],
+                        "metadata": {"candidate": False, "retry_history": True},
+                    })
+                else:
+                    self.send_json(HTTPStatus.UNPROCESSABLE_ENTITY, {"detail": str(error)})
     return Handler
 
 
