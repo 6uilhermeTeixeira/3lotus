@@ -130,14 +130,16 @@ def build_handler(state: RunnerState):
                     profiles = state.profiles()
                     if state.settings.active_strategy not in profiles:
                         raise ValueError(f"active strategy not installed: {state.settings.active_strategy}")
-                    self.send_json(HTTPStatus.OK, {"status": "ready", "strategies": len(profiles), "execution_enabled": state.settings.execution_enabled})
+                    strategy_count = len({profile.id for profile in profiles.values()})
+                    self.send_json(HTTPStatus.OK, {"status": "ready", "strategies": strategy_count, "execution_enabled": state.settings.execution_enabled})
                 except (OSError, ValueError, json.JSONDecodeError) as error:
                     self.send_json(HTTPStatus.SERVICE_UNAVAILABLE, {"status": "not_ready", "detail": str(error)})
             elif self.path == "/api/account":
                 self.send_json(HTTPStatus.OK, {"account": state.latest_account, "connected": state.latest_account is not None})
             elif self.path == "/api/strategies":
                 profiles = state.profiles()
-                self.send_json(HTTPStatus.OK, {"items": [{"id": p.id, "name": p.name, "version": p.version, "enabled": p.enabled, "runnable": p.runnable} for p in profiles.values()]})
+                unique_profiles = {profile.id: profile for profile in profiles.values()}
+                self.send_json(HTTPStatus.OK, {"items": [{"id": p.id, "name": p.name, "version": p.version, "enabled": p.enabled, "runnable": p.runnable} for p in unique_profiles.values()]})
             elif self.path == "/api/market/status":
                 self.send_json(HTTPStatus.OK, state.market.market_status())
             elif self.path == "/api/decisions/latest":
