@@ -3,7 +3,7 @@ revision = 3
 requires-python = "==3.12.*"
 
 [[package]]
-name = "2lotus-runner"
+name = "3lotus-runner"
 version = "0.1.0"
 source = { editable = "." }
 

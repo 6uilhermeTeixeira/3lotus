@@ -1,11 +1,11 @@
-RunnerUrl=http://127.0.0.1:7772/decision
+RunnerUrl=http://127.0.0.1:7773/decision
 RunnerApiKey=
 RequestTimeoutMilliseconds=10000
 TransientRetryDelayMilliseconds=100
 StrategyId=zigzag-scalper-v2
 StrategySymbol=XAUUSD
 StrategyTimeframe=M5
-CollectorId=2lotus-shadow-01
+CollectorId=3lotus-shadow-01
 SendIntervalMilliseconds=1000
 HistoryRefreshSeconds=120
 HistoryBars=100

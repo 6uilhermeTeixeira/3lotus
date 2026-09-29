@@ -124,7 +124,7 @@ def build_handler(state: RunnerState):
 
         def do_GET(self) -> None:
             if self.path == "/health":
-                self.send_json(HTTPStatus.OK, {"status": "ok", "service": "2lotus-runner", "timestamp_utc": datetime.now(UTC).isoformat()})
+                self.send_json(HTTPStatus.OK, {"status": "ok", "service": "3lotus-runner", "timestamp_utc": datetime.now(UTC).isoformat()})
             elif self.path == "/ready":
                 try:
                     profiles = state.profiles()
@@ -204,7 +204,7 @@ def main() -> None:
 
         threading.Thread(target=flush_telemetry, name="telemetry-outbox", daemon=True).start()
     server = ThreadingHTTPServer((settings.host, settings.port), build_handler(state))
-    print(f"2lotus runner listening on http://{settings.host}:{settings.port}", flush=True)
+    print(f"3lotus runner listening on http://{settings.host}:{settings.port}", flush=True)
     server.serve_forever()
 
 

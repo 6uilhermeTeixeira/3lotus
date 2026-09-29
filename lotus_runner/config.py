@@ -45,7 +45,7 @@ class Settings:
     log_backup_count: int = 7
     telemetry_url: str = ""
     telemetry_token: str = ""
-    runner_id: str = "2lotus-vps"
+    runner_id: str = "3lotus-vps"
     telemetry_interval_seconds: int = 10
 
     @classmethod
@@ -56,7 +56,7 @@ class Settings:
         database = Path(os.getenv("LOTUS_RUNNER_MARKET_DB", root / "data" / "market.db"))
         return cls(
             host=os.getenv("LOTUS_RUNNER_HOST", "127.0.0.1"),
-            port=int(os.getenv("LOTUS_RUNNER_PORT", "7772")),
+            port=int(os.getenv("LOTUS_RUNNER_PORT", "7773")),
             strategies_dir=Path(os.getenv("LOTUS_RUNNER_STRATEGIES_DIR", root / "strategies")),
             active_strategy=os.getenv("LOTUS_RUNNER_ACTIVE_STRATEGY", "zigzag-scalper-v2"),
             api_key=os.getenv("LOTUS_RUNNER_API_KEY", ""),
@@ -80,7 +80,7 @@ class Settings:
             log_backup_count=int(os.getenv("LOTUS_RUNNER_LOG_BACKUP_COUNT", "7")),
             telemetry_url=os.getenv("LOTUS_TELEMETRY_URL", "").rstrip("/"),
             telemetry_token=os.getenv("LOTUS_TELEMETRY_TOKEN", ""),
-            runner_id=os.getenv("LOTUS_RUNNER_ID", "2lotus-vps"),
+            runner_id=os.getenv("LOTUS_RUNNER_ID", "3lotus-vps"),
             telemetry_interval_seconds=int(os.getenv("LOTUS_TELEMETRY_INTERVAL_SECONDS", "10")),
         )
 
