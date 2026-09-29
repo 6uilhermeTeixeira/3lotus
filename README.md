@@ -1,8 +1,8 @@
-# 2lotus Runner
+# 3lotus Runner
 
 Compact Windows runner for versioned 4lotus strategy bundles and a MetaTrader 5 bridge. It is designed for the 1 GB FXVPS server: no Docker or external database server. SQLite stores the rolling tick context, durable telemetry outbox and local decision/execution audit.
 
-The runner listens on `127.0.0.1:7772`. It sends best-effort event batches to 3lotus when `LOTUS_TELEMETRY_URL` and `LOTUS_TELEMETRY_TOKEN` are configured; loss of that connection never moves strategy evaluation off the VPS.
+The runner listens on `127.0.0.1:7773`. It sends best-effort event batches to 2lotus when `LOTUS_TELEMETRY_URL` and `LOTUS_TELEMETRY_TOKEN` are configured; loss of that connection never moves strategy evaluation off the VPS.
 
 ## Safety model
 
