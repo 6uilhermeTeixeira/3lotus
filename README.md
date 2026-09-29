@@ -23,6 +23,10 @@ py -m lotus_runner.main --check
 ## MT5 bridge
 
 Compile `mt5/LotusRunnerBridge.mq5` in MetaEditor and attach it to the configured XAUUSD M5 chart. In MT5, add `http://127.0.0.1:7772` under **Tools → Options → Expert Advisors → Allow WebRequest for listed URL**.
+Load `mt5/LotusRunnerBridge-shadow.set` for the first five validation sessions. It
+keeps order execution disabled and does not embed credentials. Do not reuse the
+legacy `2lotus-shadow.set`: it belongs to `SyncLeadBridgeEA` and has a different
+request and strategy-ID contract.
 
 The bridge collects every `OnTick`, batches ticks every 50 ms, refreshes 3,000 completed M5 candles every 30 seconds, and forwards order-book snapshots when the broker provides them. The runner keeps a 900-second rolling tick window. Shadow mode remains the default and execution requires the separate demo guard configuration.
 
