@@ -128,6 +128,8 @@ def build_handler(state: RunnerState):
             elif self.path == "/ready":
                 try:
                     profiles = state.profiles()
+                    if state.settings.active_strategy not in profiles:
+                        raise ValueError(f"active strategy not installed: {state.settings.active_strategy}")
                     self.send_json(HTTPStatus.OK, {"status": "ready", "strategies": len(profiles), "execution_enabled": state.settings.execution_enabled})
                 except (OSError, ValueError, json.JSONDecodeError) as error:
                     self.send_json(HTTPStatus.SERVICE_UNAVAILABLE, {"status": "not_ready", "detail": str(error)})
