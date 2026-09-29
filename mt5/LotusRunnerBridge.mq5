@@ -51,30 +51,10 @@ int OnInit()
    }
    if(EnableOrderExecution)
    {
-      if(AccountInfoInteger(ACCOUNT_TRADE_MODE) != ACCOUNT_TRADE_MODE_DEMO)
-      {
-         Print("LotusRunnerBridge refuses execution: only demo accounts are allowed.");
-         return(INIT_FAILED);
-      }
-      if(AllowedAccountLogin <= 0 || AccountInfoInteger(ACCOUNT_LOGIN) != AllowedAccountLogin)
-      {
-         PrintFormat("LotusRunnerBridge refuses execution: login %I64d is not the allowed demo login %I64d.", AccountInfoInteger(ACCOUNT_LOGIN), AllowedAccountLogin);
-         return(INIT_FAILED);
-      }
-      if(MaxOrderLot <= 0 || MaxOrderLot > 0.01 || MaxOpenPositions != 1 || MaxDailyLossCurrency <= 0)
-      {
-         Print("LotusRunnerBridge refuses execution: unsafe risk limits.");
-         return(INIT_FAILED);
-      }
-      Trade.SetExpertMagicNumber(MagicNumber);
-      Trade.SetDeviationInPoints(30);
-      Trade.SetTypeFillingBySymbol(StrategySymbol);
-      Print("LotusRunnerBridge initialized in DEMO EXECUTION mode. Risk limits are active.");
+      Print("LotusRunnerBridge is a shadow-only build and refuses order execution.");
+      return(INIT_PARAMETERS_INCORRECT);
    }
-   else
-   {
-      Print("LotusRunnerBridge initialized in shadow mode. Add the runner URL to MT5 WebRequest allowlist.");
-   }
+   Print("LotusRunnerBridge initialized in shadow mode. Add the runner URL to MT5 WebRequest allowlist.");
    BookAvailable = MarketBookAdd(StrategySymbol);
    if(!BookAvailable)
       Print("LotusRunnerBridge order book unavailable; structural entries will remain blocked.");
@@ -153,8 +133,8 @@ void OnTimer()
    }
    ArrayResize(TickBuffer, 0);
    if(includeHistory) LastHistoryRefresh = TimeCurrent();
-   if(EnableOrderExecution)
-      ExecuteDecision(CharArrayToString(result));
+   // This migration build intentionally never sends orders.  A separate,
+   // reviewed execution build is required after the shadow validation period.
 }
 
 void ExecuteDecision(const string response)
