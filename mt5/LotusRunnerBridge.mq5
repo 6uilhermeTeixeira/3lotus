@@ -2,7 +2,7 @@
 #include <Trade\Trade.mqh>
 
 input string RunnerUrl = "http://127.0.0.1:7772/decision";
-input string RunnerApiKey = "d64b30014932d4e750ac764a3636ee5f968cf0a2d32c409a688d23758f51a4e0";
+input string RunnerApiKey = "";
 input int RequestTimeoutMilliseconds = 10000;
 input int TransientRetryDelayMilliseconds = 100;
 input string StrategyId = "zigzag-scalper-v2";
@@ -13,8 +13,8 @@ input int SendIntervalMilliseconds = 1000;
 input int HistoryRefreshSeconds = 120;
 // The V2.0 runner derives its M30 pivots from the most recent M5 candles.
 input int HistoryBars = 100;
-input bool EnableOrderExecution = true;
-input long AllowedAccountLogin = 466305;
+input bool EnableOrderExecution = false;
+input long AllowedAccountLogin = 0;
 input double MaxOrderLot = 0.01;
 input int MaxOpenPositions = 1;
 input double MaxDailyLossCurrency = 5.0;
