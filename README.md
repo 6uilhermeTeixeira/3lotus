@@ -1,6 +1,8 @@
-# Lotus Runner
+# 2lotus Runner
 
-Compact Windows runner for the ZigZag V7 strategy and a MetaTrader 5 bridge. It is designed for the 1 GB FXVPS server: no Docker or external database server. SQLite stores the rolling tick context and the local decision/execution audit.
+Compact Windows runner for versioned 4lotus strategy bundles and a MetaTrader 5 bridge. It is designed for the 1 GB FXVPS server: no Docker or external database server. SQLite stores the rolling tick context, durable telemetry outbox and local decision/execution audit.
+
+The runner listens on `127.0.0.1:7772`. It sends best-effort event batches to 3lotus when `LOTUS_TELEMETRY_URL` and `LOTUS_TELEMETRY_TOKEN` are configured; loss of that connection never moves strategy evaluation off the VPS.
 
 ## Safety model
 
@@ -20,7 +22,7 @@ py -m lotus_runner.main --check
 
 ## MT5 bridge
 
-Compile `mt5/LotusRunnerBridge.mq5` in MetaEditor and attach it to the configured XAUUSD M5 chart. In MT5, add `http://127.0.0.1:1111` under **Tools → Options → Expert Advisors → Allow WebRequest for listed URL**.
+Compile `mt5/LotusRunnerBridge.mq5` in MetaEditor and attach it to the configured XAUUSD M5 chart. In MT5, add `http://127.0.0.1:7772` under **Tools → Options → Expert Advisors → Allow WebRequest for listed URL**.
 
 The bridge collects every `OnTick`, batches ticks every 50 ms, refreshes 3,000 completed M5 candles every 30 seconds, and forwards order-book snapshots when the broker provides them. The runner keeps a 900-second rolling tick window. Shadow mode remains the default and execution requires the separate demo guard configuration.
 
@@ -33,12 +35,12 @@ V7's structural-expansion branch remains fail-closed until the 900-second tick w
 ## Runtime telemetry
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:1111/api/market/status
-Invoke-RestMethod http://127.0.0.1:1111/api/decisions/latest
-Invoke-RestMethod http://127.0.0.1:1111/api/metrics
+Invoke-RestMethod http://127.0.0.1:7772/api/market/status
+Invoke-RestMethod http://127.0.0.1:7772/api/decisions/latest
+Invoke-RestMethod http://127.0.0.1:7772/api/metrics
 ```
 
-Runtime data is written under `C:\LotusRunner\data` and rotating logs under `C:\LotusRunner\logs` by default.
+Runtime data is written under `C:\2Lotus\data` and rotating logs under `C:\2Lotus\logs` by default.
 
 For the VPS procedure, see `docs/vps-shadow-install.md`.
 
@@ -47,7 +49,7 @@ For copy-and-paste PowerShell commands and error meanings, see
 
 ## GitHub Actions artifact
 
-Every push to `main` produces `lotus-runner-windows-x64.zip`. It contains the runner, strategy bundles, bridge source, and installation helper. The `.mq5` file is source code and must be compiled in the installed MT5 MetaEditor, yielding the local `.ex5` file. Use the latest artifact; earlier artifacts before commit `runner_entry.py` do not start correctly.
+Every push to `main` produces `2lotus-runner-windows-x64.zip`. It contains the runner, strategy bundles, bridge source, and installation helper. The `.mq5` file is source code and must be compiled in the installed MT5 MetaEditor, yielding the local `.ex5` file. Use the latest artifact; earlier artifacts before commit `runner_entry.py` do not start correctly.
 
 ## Adding a strategy
 

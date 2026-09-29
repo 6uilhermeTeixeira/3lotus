@@ -6,7 +6,7 @@ a configuração demo separada e continua bloqueada para contas reais.
 ## 1. Baixar e extrair o artefato
 
 1. No GitHub, abra **Actions → Build Windows runner** e baixe o artefato
-   `lotus-runner-windows-x64` mais recente.
+   `2lotus-runner-windows-x64` mais recente.
 2. Extraia o ZIP, por exemplo em `C:\Users\Administrator\Downloads`.
 3. Abra o PowerShell como administrador, entre em `scripts` dentro da pasta
    extraída e execute:
@@ -16,16 +16,16 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\install.ps1
 ```
 
-O pacote será instalado em `C:\LotusRunner`.
+O pacote será instalado em `C:\2Lotus`.
 
 ## 2. Configurar o runner
 
-Abra `C:\LotusRunner\.env` no Bloco de Notas. Para o primeiro teste, mantenha:
+Abra `C:\2Lotus\.env` no Bloco de Notas. Para o primeiro teste, mantenha:
 
 ```text
-LOTUS_RUNNER_HOME=C:\LotusRunner
+LOTUS_RUNNER_HOME=C:\2Lotus
 LOTUS_RUNNER_HOST=127.0.0.1
-LOTUS_RUNNER_PORT=1111
+LOTUS_RUNNER_PORT=7772
 LOTUS_RUNNER_ACTIVE_STRATEGY=zigzag-v7
 LOTUS_RUNNER_EXECUTION_ENABLED=false
 LOTUS_RUNNER_ALLOWED_ACCOUNT_LOGIN=0
@@ -42,7 +42,7 @@ locais.
 No PowerShell como administrador:
 
 ```powershell
-cd C:\LotusRunner
+cd C:\2Lotus
 .\lotus-runner.exe --check
 .\lotus-runner.exe
 ```
@@ -51,21 +51,21 @@ O primeiro comando deve exibir `zigzag-v7` e `execution_enabled: false`.
 Deixe essa janela aberta durante o teste. Em outra janela do PowerShell, valide:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:1111/health
-Invoke-RestMethod http://127.0.0.1:1111/ready
+Invoke-RestMethod http://127.0.0.1:7772/health
+Invoke-RestMethod http://127.0.0.1:7772/ready
 ```
 
 ## 4. Compilar e configurar o bridge MT5
 
 1. Abra o MT5 e pressione `F4` para abrir o MetaEditor.
-2. Em **MQL5 → Experts**, copie `C:\LotusRunner\mt5\LotusRunnerBridge.mq5`.
+2. Em **MQL5 → Experts**, copie `C:\2Lotus\mt5\LotusRunnerBridge.mq5`.
 3. Abra o arquivo no MetaEditor e pressione `F7` para compilar. O resultado
    deve ser `LotusRunnerBridge.ex5` sem erros.
 4. No MT5, abra o gráfico **XAUUSD / M5** e arraste o EA para o gráfico.
 5. Nas entradas do EA, mantenha:
 
 ```text
-RunnerUrl=http://127.0.0.1:1111/decision
+RunnerUrl=http://127.0.0.1:7772/decision
 StrategyId=zigzag-v7
 StrategySymbol=XAUUSD
 StrategyTimeframe=M5
@@ -76,7 +76,7 @@ EnableOrderExecution=false
 ```
 
 6. Em **Ferramentas → Opções → Expert Advisors**, adicione
-   `http://127.0.0.1:1111` à lista **Allow WebRequest for listed URL**.
+   `http://127.0.0.1:7772` à lista **Allow WebRequest for listed URL**.
 7. Confirme que o botão **Algo Trading** pode ficar ativado para permitir o
    WebRequest do EA; o bridge continua sem permissão de ordem.
 
@@ -86,7 +86,7 @@ Depois de anexar o EA, abra a aba **Experts** do MT5. Não deve haver erro de
 WebRequest. No PowerShell, execute:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:1111/api/account
+Invoke-RestMethod http://127.0.0.1:7772/api/account
 ```
 
 O campo `connected` deve ser `true` e a conta deve aparecer sem senha.

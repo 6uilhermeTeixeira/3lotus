@@ -21,21 +21,21 @@ jobs:
       - name: Test
         run: python -m pytest -q
       - name: Build runner
-        run: pyinstaller --noconfirm --clean --name lotus-runner --onedir --paths . runner_entry.py
+        run: pyinstaller --noconfirm --clean --name 2lotus-runner --onedir --paths . runner_entry.py
       - name: Smoke-test executable
-        run: .\dist\lotus-runner\lotus-runner.exe --check
+        run: .\dist\2lotus-runner\2lotus-runner.exe --check
       - name: Assemble deployable package
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path package\lotus-runner\strategies, package\lotus-runner\mt5, package\lotus-runner\scripts
-          Copy-Item dist\lotus-runner\* package\lotus-runner -Recurse
-          Copy-Item strategies\* package\lotus-runner\strategies
-          Copy-Item mt5\LotusRunnerBridge.mq5 package\lotus-runner\mt5
-          Copy-Item scripts\install.ps1 package\lotus-runner\scripts
-          Copy-Item README.md package\lotus-runner
-          Compress-Archive -Path package\lotus-runner -DestinationPath package\lotus-runner-windows-x64.zip
+          New-Item -ItemType Directory -Force -Path package\2lotus-runner\strategies, package\2lotus-runner\mt5, package\2lotus-runner\scripts
+          Copy-Item dist\2lotus-runner\* package\2lotus-runner -Recurse
+          Copy-Item strategies\* package\2lotus-runner\strategies
+          Copy-Item mt5\LotusRunnerBridge.mq5 package\2lotus-runner\mt5
+          Copy-Item scripts\install.ps1 package\2lotus-runner\scripts
+          Copy-Item README.md package\2lotus-runner
+          Compress-Archive -Path package\2lotus-runner -DestinationPath package\2lotus-runner-windows-x64.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: lotus-runner-windows-x64
-          path: package/lotus-runner-windows-x64.zip
+          name: 2lotus-runner-windows-x64
+          path: package/2lotus-runner-windows-x64.zip
           if-no-files-found: error

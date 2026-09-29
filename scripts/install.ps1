@@ -1,5 +1,5 @@
 $ErrorActionPreference = "Stop"
-$installRoot = "C:\LotusRunner"
+$installRoot = "C:\2Lotus"
 $sourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 New-Item -ItemType Directory -Force -Path $installRoot | Out-Null
 if ($sourceRoot -ne $installRoot) {
@@ -8,9 +8,9 @@ if ($sourceRoot -ne $installRoot) {
 
 if (-not (Test-Path "$installRoot\.env")) {
 @'
-LOTUS_RUNNER_HOME=C:\LotusRunner
+LOTUS_RUNNER_HOME=C:\2Lotus
 LOTUS_RUNNER_HOST=127.0.0.1
-LOTUS_RUNNER_PORT=1111
+LOTUS_RUNNER_PORT=7772
 LOTUS_RUNNER_ACTIVE_STRATEGY=zigzag-scalper-v2
 LOTUS_RUNNER_EXECUTION_ENABLED=false
 LOTUS_RUNNER_ALLOWED_ACCOUNT_LOGIN=0
@@ -25,6 +25,10 @@ LOTUS_RUNNER_REQUIRE_ORDER_BOOK=true
 LOTUS_RUNNER_AUDIT_RETENTION_DAYS=30
 LOTUS_RUNNER_LOG_MAX_BYTES=5000000
 LOTUS_RUNNER_LOG_BACKUP_COUNT=7
+LOTUS_RUNNER_ID=2lotus-vps
+LOTUS_TELEMETRY_URL=
+LOTUS_TELEMETRY_TOKEN=
+LOTUS_TELEMETRY_INTERVAL_SECONDS=10
 '@ | Set-Content -Path "$installRoot\.env" -Encoding ascii
 }
 

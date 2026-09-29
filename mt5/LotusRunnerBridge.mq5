@@ -1,7 +1,7 @@
 #property strict
 #include <Trade\Trade.mqh>
 
-input string RunnerUrl = "http://127.0.0.1:1111/decision";
+input string RunnerUrl = "http://127.0.0.1:7772/decision";
 input string RunnerApiKey = "d64b30014932d4e750ac764a3636ee5f968cf0a2d32c409a688d23758f51a4e0";
 input int RequestTimeoutMilliseconds = 10000;
 input int TransientRetryDelayMilliseconds = 100;

@@ -13,7 +13,7 @@ def test_loads_local_dotenv(monkeypatch, tmp_path) -> None:
 
 
 def test_rejects_noncanonical_tick_window() -> None:
-    settings = Settings("127.0.0.1", 1111, Path("strategies"), "zigzag-v7", "", False, 0, 0.01, tick_window_seconds=60)
+    settings = Settings("127.0.0.1", 7772, Path("strategies"), "zigzag-v7", "", False, 0, 0.01, tick_window_seconds=60)
     try:
         settings.validate()
     except ValueError as error:

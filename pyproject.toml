@@ -3,17 +3,21 @@ requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lotus-runner"
+name = "2lotus-runner"
 version = "0.1.0"
-description = "Minimal, fail-closed MT5 strategy runner"
+description = "Fail-closed MT5 runner for the 2lotus VPS"
 requires-python = ">=3.12,<3.13"
 dependencies = []
 
 [project.scripts]
 lotus-runner = "lotus_runner.main:main"
+2lotus-runner = "lotus_runner.main:main"
 
 [tool.setuptools]
 packages = ["lotus_runner", "lotus_runner.strategies"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = ["pytest>=8,<9"]

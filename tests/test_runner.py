@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def settings() -> Settings:
-    return Settings("127.0.0.1", 1111, ROOT / "strategies", "zigzag-v7", "", False, 0, 0.01)
+    return Settings("127.0.0.1", 7772, ROOT / "strategies", "zigzag-v7", "", False, 0, 0.01)
 
 
 def test_strategy_bundles_pass_integrity_check() -> None:
@@ -31,7 +31,7 @@ def test_unimported_v7_fails_closed() -> None:
 
 def test_execution_rejects_non_demo_account() -> None:
     profile = load_profiles(ROOT / "strategies")["zigzag-v7"]
-    configured = Settings("127.0.0.1", 1111, ROOT / "strategies", "zigzag-v7", "test-key", True, 466305, 0.01)
+    configured = Settings("127.0.0.1", 7772, ROOT / "strategies", "zigzag-v7", "test-key", True, 466305, 0.01)
     result = decide({"account": {"login": 466305, "trade_mode": "real"}}, profile, configured)
     assert result["action"] == "hold"
     assert result["reason"] == "execution is restricted to demo accounts"
@@ -51,7 +51,7 @@ def test_tampered_bundle_is_rejected(tmp_path: Path) -> None:
 
 def test_demo_candidate_is_promoted_with_explicit_execution_prices(monkeypatch) -> None:
     profile = load_profiles(ROOT / "strategies")["zigzag-v7"]
-    configured = Settings("127.0.0.1", 1111, ROOT / "strategies", "zigzag-v7", "test-key", True, 466305, 0.01)
+    configured = Settings("127.0.0.1", 7772, ROOT / "strategies", "zigzag-v7", "test-key", True, 466305, 0.01)
     monkeypatch.setattr(engine, "evaluate_zigzag_v7", lambda *_: {
         "action": "hold", "reason": "shadow_signal", "size": 0.0, "risk_checks": [],
         "metadata": {
@@ -67,7 +67,7 @@ def test_demo_candidate_is_promoted_with_explicit_execution_prices(monkeypatch) 
 
 def test_demo_candidate_without_stop_fails_closed(monkeypatch) -> None:
     profile = load_profiles(ROOT / "strategies")["zigzag-v7"]
-    configured = Settings("127.0.0.1", 1111, ROOT / "strategies", "zigzag-v7", "test-key", True, 466305, 0.01)
+    configured = Settings("127.0.0.1", 7772, ROOT / "strategies", "zigzag-v7", "test-key", True, 466305, 0.01)
     monkeypatch.setattr(engine, "evaluate_zigzag_v7", lambda *_: {
         "action": "hold", "reason": "shadow_signal", "size": 0.0, "risk_checks": [],
         "metadata": {"candidate": True, "suggested_action": "buy", "suggested_size": 0.01, "entry_price": 2000.1},

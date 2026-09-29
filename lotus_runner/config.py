@@ -43,6 +43,10 @@ class Settings:
     log_path: Path | None = None
     log_max_bytes: int = 5_000_000
     log_backup_count: int = 7
+    telemetry_url: str = ""
+    telemetry_token: str = ""
+    runner_id: str = "2lotus-vps"
+    telemetry_interval_seconds: int = 10
 
     @classmethod
     def from_environment(cls) -> "Settings":
@@ -52,7 +56,7 @@ class Settings:
         database = Path(os.getenv("LOTUS_RUNNER_MARKET_DB", root / "data" / "market.db"))
         return cls(
             host=os.getenv("LOTUS_RUNNER_HOST", "127.0.0.1"),
-            port=int(os.getenv("LOTUS_RUNNER_PORT", "1111")),
+            port=int(os.getenv("LOTUS_RUNNER_PORT", "7772")),
             strategies_dir=Path(os.getenv("LOTUS_RUNNER_STRATEGIES_DIR", root / "strategies")),
             active_strategy=os.getenv("LOTUS_RUNNER_ACTIVE_STRATEGY", "zigzag-scalper-v2"),
             api_key=os.getenv("LOTUS_RUNNER_API_KEY", ""),
@@ -74,6 +78,10 @@ class Settings:
             log_path=Path(os.getenv("LOTUS_RUNNER_LOG_PATH", root / "logs" / "lotus-runner.log")),
             log_max_bytes=int(os.getenv("LOTUS_RUNNER_LOG_MAX_BYTES", "5000000")),
             log_backup_count=int(os.getenv("LOTUS_RUNNER_LOG_BACKUP_COUNT", "7")),
+            telemetry_url=os.getenv("LOTUS_TELEMETRY_URL", "").rstrip("/"),
+            telemetry_token=os.getenv("LOTUS_TELEMETRY_TOKEN", ""),
+            runner_id=os.getenv("LOTUS_RUNNER_ID", "2lotus-vps"),
+            telemetry_interval_seconds=int(os.getenv("LOTUS_TELEMETRY_INTERVAL_SECONDS", "10")),
         )
 
     def validate(self) -> None:
@@ -95,6 +103,10 @@ class Settings:
             raise ValueError("LOTUS_RUNNER_MAX_SPREAD_POINTS must be positive")
         if self.audit_retention_days < 1 or self.log_max_bytes < 100_000 or self.log_backup_count < 1:
             raise ValueError("audit and log retention settings must be positive")
+        if self.telemetry_url and not self.telemetry_token:
+            raise ValueError("LOTUS_TELEMETRY_TOKEN is required when LOTUS_TELEMETRY_URL is set")
+        if self.telemetry_interval_seconds < 1:
+            raise ValueError("LOTUS_TELEMETRY_INTERVAL_SECONDS must be positive")
         if self.execution_enabled and (not self.api_key or self.allowed_account_login <= 0):
             raise ValueError("demo execution requires an API key and an explicit allowed account login")
 

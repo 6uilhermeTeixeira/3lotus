@@ -1,12 +1,12 @@
 # Comandos rápidos da VPS
 
 Execute estes comandos no PowerShell da VPS. O runner deve estar extraído em
-`C:\LotusRunner` e o MT5 deve estar aberto na mesma máquina.
+`C:\2Lotus` e o MT5 deve estar aberto na mesma máquina.
 
 ## Verificar instalação e configuração
 
 ```powershell
-cd C:\LotusRunner
+cd C:\2Lotus
 Get-Location
 Test-Path .\lotus-runner.exe
 Test-Path .\.env
@@ -18,14 +18,14 @@ Test-Path .\.env
 Mantenha esta janela aberta:
 
 ```powershell
-cd C:\LotusRunner
+cd C:\2Lotus
 .\lotus-runner.exe
 ```
 
 Mensagem esperada:
 
 ```text
-Lotus Runner listening on http://127.0.0.1:1111
+Lotus Runner listening on http://127.0.0.1:7772
 ```
 
 ## Testar a API local
@@ -33,13 +33,13 @@ Lotus Runner listening on http://127.0.0.1:1111
 Abra uma segunda janela do PowerShell:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:1111/health
-Invoke-RestMethod http://127.0.0.1:1111/ready
-Invoke-RestMethod http://127.0.0.1:1111/api/strategies
-Invoke-RestMethod http://127.0.0.1:1111/api/account
-Invoke-RestMethod http://127.0.0.1:1111/api/market/status
-Invoke-RestMethod http://127.0.0.1:1111/api/decisions/latest
-Invoke-RestMethod http://127.0.0.1:1111/api/metrics
+Invoke-RestMethod http://127.0.0.1:7772/health
+Invoke-RestMethod http://127.0.0.1:7772/ready
+Invoke-RestMethod http://127.0.0.1:7772/api/strategies
+Invoke-RestMethod http://127.0.0.1:7772/api/account
+Invoke-RestMethod http://127.0.0.1:7772/api/market/status
+Invoke-RestMethod http://127.0.0.1:7772/api/decisions/latest
+Invoke-RestMethod http://127.0.0.1:7772/api/metrics
 ```
 
 No endpoint `/api/account`, `connected : True` confirma que o EA já enviou o
@@ -53,7 +53,7 @@ latência. `/api/metrics` resume ticks, duplicatas, decisões e execuções.
 
 ```powershell
 Get-Process lotus-runner -ErrorAction SilentlyContinue
-Get-NetTCPConnection -LocalPort 1111 -State Listen
+Get-NetTCPConnection -LocalPort 7772 -State Listen
 ```
 
 ## Interpretar erros do EA

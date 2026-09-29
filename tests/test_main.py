@@ -6,7 +6,7 @@ from lotus_runner.main import RunnerState
 
 def test_runner_ingests_market_data_and_audits_decision(tmp_path: Path) -> None:
     settings = Settings(
-        "127.0.0.1", 1111, Path(__file__).resolve().parents[1] / "strategies",
+        "127.0.0.1", 7772, Path(__file__).resolve().parents[1] / "strategies",
         "zigzag-v7", "", False, 0, 0.01, market_db_path=tmp_path / "market.db",
     )
     state = RunnerState(settings)

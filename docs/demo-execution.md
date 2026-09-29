@@ -5,7 +5,7 @@ confirmar que a conta exibida pelo MT5 é a demo autorizada.
 
 ## Configurar o runner
 
-No `C:\LotusRunner\.env`, use uma chave local forte e o login demo correto:
+No `C:\2Lotus\.env`, use uma chave local forte e o login demo correto:
 
 ```text
 LOTUS_RUNNER_API_KEY=troque-por-uma-chave-local
@@ -22,7 +22,7 @@ mesmo informado no campo `RunnerApiKey` do EA.
 Compile a versão mais recente de `mt5\LotusRunnerBridge.mq5` e use:
 
 ```text
-RunnerUrl=http://127.0.0.1:1111/decision
+RunnerUrl=http://127.0.0.1:7772/decision
 RunnerApiKey=troque-por-uma-chave-local
 StrategyId=zigzag-v7
 StrategySymbol=XAUUSD
@@ -49,7 +49,7 @@ perda diária atingir 5 unidades da moeda da conta.
 ## Ativação
 
 1. Pare o runner antigo.
-2. Extraia o artefato mais recente em `C:\LotusRunner`.
+2. Extraia o artefato mais recente em `C:\2Lotus`.
 3. Edite `.env` e configure a chave/login acima.
 4. Inicie `.\lotus-runner.exe --check`; confirme `execution_enabled: true`.
 5. Inicie `.\lotus-runner.exe`.

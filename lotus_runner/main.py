@@ -15,6 +15,7 @@ from .config import Settings
 from .engine import decide
 from .market import MarketStore
 from .strategies.registry import load_profiles
+from .telemetry import TelemetryOutbox
 
 
 LOGGER = logging.getLogger("lotus_runner")
@@ -27,6 +28,7 @@ class RunnerState:
         self.latest_account: dict[str, Any] | None = None
         database = settings.market_db_path or settings.strategies_dir.parent / "data" / "market.db"
         self.market = MarketStore(database, settings.tick_window_seconds, settings.audit_retention_days)
+        self.telemetry = TelemetryOutbox(database, settings.runner_id, settings.telemetry_url, settings.telemetry_token)
         self.candles: dict[str, list[dict[str, Any]]] = {}
         self.last_request_id: dict[str, str] = {}
         self.last_evaluation_ns: dict[str, int] = {}
@@ -78,6 +80,14 @@ class RunnerState:
             response = decide(prepared, profiles.get(strategy_id), self.settings)
             latency_ms = (time.perf_counter_ns() - started) / 1_000_000
             self.market.record_decision(request_id, symbol, response, latency_ms)
+            profile = profiles.get(strategy_id)
+            self.telemetry.enqueue(
+                "decision",
+                {"request_id": request_id, "symbol": symbol, "response": response, "latency_ms": round(latency_ms, 3)},
+                strategy_id=strategy_id,
+                strategy_version=profile.version if profile else "",
+                account_environment=str(account.get("environment") or account.get("trade_mode") or "unknown"),
+            )
             LOGGER.info(json.dumps({"event": "decision", "request_id": request_id, "symbol": symbol, "latency_ms": round(latency_ms, 3), "action": response.get("action"), "reason": response.get("reason")}, separators=(",", ":")))
             self.last_evaluation_ns[symbol] = now_ns
             return {**response, "request_id": request_id, "decision_latency_ms": round(latency_ms, 3)}
@@ -114,7 +124,7 @@ def build_handler(state: RunnerState):
 
         def do_GET(self) -> None:
             if self.path == "/health":
-                self.send_json(HTTPStatus.OK, {"status": "ok", "service": "lotus-runner", "timestamp_utc": datetime.now(UTC).isoformat()})
+                self.send_json(HTTPStatus.OK, {"status": "ok", "service": "2lotus-runner", "timestamp_utc": datetime.now(UTC).isoformat()})
             elif self.path == "/ready":
                 try:
                     profiles = state.profiles()
@@ -131,7 +141,7 @@ def build_handler(state: RunnerState):
             elif self.path == "/api/decisions/latest":
                 self.send_json(HTTPStatus.OK, {"item": state.market.last_decision})
             elif self.path == "/api/metrics":
-                self.send_json(HTTPStatus.OK, state.market.metrics())
+                self.send_json(HTTPStatus.OK, {**state.market.metrics(), "telemetry_outbox_pending": state.telemetry.pending()})
             else:
                 self.send_json(HTTPStatus.NOT_FOUND, {"detail": "not found"})
 
@@ -146,6 +156,7 @@ def build_handler(state: RunnerState):
                 payload = self.read_json()
                 if self.path == "/execution":
                     state.market.record_execution(payload)
+                    state.telemetry.enqueue("order_result", payload)
                     LOGGER.info(json.dumps({"event": "execution", **payload}, separators=(",", ":")))
                     self.send_json(HTTPStatus.OK, {"status": "recorded"})
                 else:
@@ -181,8 +192,15 @@ def main() -> None:
     if args.check:
         print(json.dumps({"status": "ok", "strategies": sorted(profiles), "execution_enabled": settings.execution_enabled}))
         return
+    if settings.telemetry_url:
+        def flush_telemetry() -> None:
+            while True:
+                state.telemetry.flush()
+                time.sleep(settings.telemetry_interval_seconds)
+
+        threading.Thread(target=flush_telemetry, name="telemetry-outbox", daemon=True).start()
     server = ThreadingHTTPServer((settings.host, settings.port), build_handler(state))
-    print(f"Lotus Runner listening on http://{settings.host}:{settings.port}", flush=True)
+    print(f"2lotus runner listening on http://{settings.host}:{settings.port}", flush=True)
     server.serve_forever()
 
 
